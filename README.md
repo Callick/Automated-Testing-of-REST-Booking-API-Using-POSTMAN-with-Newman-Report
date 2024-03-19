@@ -1,5 +1,5 @@
 # REST Booking API Testing with Postman & Newman
-This project aims to automate the testing of a REST booking API using Postman and Newman. By automating the testing process, i ensure consistent and reliable validation of the API endpoints, reducing manual effort and enabling faster feedback on changes.
+This project aims to automate the testing of a REST booking API using Postman and Newman. By automating the testing process, I ensure consistent and reliable validation of the API endpoints, reducing manual effort and enabling faster feedback on changes.
 # Features
 •	Comprehensive API testing suite covering various HTTP methods including GET, POST, PUT, PATCH, and DELETE.
 •	Requests with different configurations such as request bodies, pre-request scripts, and tests to ensure comprehensive API endpoint validation.
