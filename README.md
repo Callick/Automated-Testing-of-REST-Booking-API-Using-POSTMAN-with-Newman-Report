@@ -80,6 +80,22 @@ pm.environment.set("extraNeeds", selected)
 "additionalneeds" : "{{extraNeeds}}"
 }
 ```
+#### Tests:
+```
+// CHECK STATUS CODE. IF 200, DO CERTAIN TASKS.
+switch(pm.response.code)
+    {
+        case 200:
+            // TAKE bookingid FROM RESPONSE THEN SET THAT IN ENVIRONMENT
+            var resData = pm.response.json()
+            pm.environment.set('bID', resData.bookingid)
+            var id = pm.environment.get("bID")
+            pm.test(`😊 Booking Successful. The Booking ID-${id}.`)
+            break
+        default:
+            pm.test("☹️ Booking Unsuccessful !")
+    }
+```
 #### Response Body:
 ```
 {
@@ -100,6 +116,61 @@ pm.environment.set("extraNeeds", selected)
 ### 2. Read After Create Booking.
 #### URL: https://restful-booker.herokuapp.com/booking/3078
 #### METHOD: GET
+#### Pre-request Script: None
+#### Request Body: None
+#### Tests:
+```
+// TAKE ID FROM ENVIRONMENT
+const id = pm.environment.get("bID")
+switch (pm.response.code)
+
+    {
+        case 200:
+            pm.test(`Details Belong From ID- ${id}`)
+            // STORE THE RESPONSE INTO A VARIABLE
+            var resData = pm.response.json()
+            // CHECK THAT THE RESPONSE DATA MATCH WITH GIVEN DATA OR NOT
+            pm.test("Checking whether first name is inserted as given input or not.", function(){
+                pm.expect(pm.environment.get("fName")).to.eql(resData.firstname)
+            })
+            pm.test("Checking whether last name is inserted as given input or not.", function(){
+                pm.expect(pm.environment.get("lName")).to.eql(resData.lastname)
+            })
+            pm.test("Checking whether total price is inserted as given input or not.", function(){
+                //const intValue = parseInt(resData.totalprice)
+                // NEED TO PARSE ENVIRONMENT'S VALUE TO INTEGER FORMAT CAUSE IT PASSES STRING
+                //var enValue = parseInt(pm.environment.get("tPrice"))
+                pm.expect(parseInt(pm.environment.get("tPrice"))).to.eql(resData.totalprice)
+            })
+            pm.test("Total Price is cross: 500", function(){
+                //const intValue = parseInt(resData.totalprice)
+                // NEED TO PARSE ENVIRONMENT'S VALUE TO INTEGER FORMAT CAUSE IT PASSES STRING
+                //var enValue = parseInt(pm.environment.get("tPrice"))
+                pm.expect(parseInt(pm.environment.get("tPrice"))).to.be.above(500)
+            })
+            pm.test("Checking whether deposit price is inserted as given input or not.", function(){
+                // NEED TO PARSE ENVIRONMENT'S VALUE TO BOOLEAN FORMAT CAUSE IT PASSES STRING
+                var enValue = JSON.parse(pm.environment.get("dPaid"))
+                pm.expect(enValue).to.eql(resData.depositpaid)
+            })
+            pm.test("Checking whether checkin date is inserted as given input or not.", function(){
+                pm.expect(pm.environment.get("ciDate")).to.eql(resData.bookingdates.checkin)
+            })
+            pm.test("Checking whether checkout date is inserted as given input or not.", function(){
+                pm.expect(pm.environment.get("coDate")).to.eql(resData.bookingdates.checkout)
+            })
+            pm.test("Checking whether additional need is inserted as given input or not.", function(){
+                pm.expect(pm.environment.get("extraNeeds")).to.eql(resData.additionalneeds)
+            })
+        break
+        case 404:
+            pm.test(`☹️ Details Unavailable For ID- ${id}`)
+        break
+        default:
+            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)
+    }
+
+```
 #### Response Body:
 ```
 {
@@ -117,12 +188,25 @@ pm.environment.set("extraNeeds", selected)
 ### 3. Create A Token For Authentication.
 #### URL: https://restful-booker.herokuapp.com/auth
 #### METHOD: POST
+#### Pre-request Script: None
 #### Request Body:
 ```
 {
 "username": "admin",
 "password": "password123"
 }
+```
+#### Tests:
+```
+switch (pm.response.code)
+    {
+        case 200:
+                pm.environment.set("AuthToken", pm.response.json().token)
+                pm.test("Now, You Are Allowed To Update/Delete Bookings.")
+        break
+        default:
+            pm.test("☹️ Not Allowed To Update/Delete Bookings.")
+    }
 ```
 #### Response Body:
 ```
@@ -171,6 +255,22 @@ pm.environment.set("uextraNeeds", selected)
     "additionalneeds": "{{uextraNeeds}}"
 }
 ```
+#### Tests:
+```
+const id = pm.environment.get("bID")
+switch(pm.response.code)
+    {
+        case 200:
+            pm.test(`Successful To Modify Details of Booking ID- ${id}.`)
+        break
+        case 403:
+            pm.test(`Unsuccessful To Modify Details of Booking ID- ${id}`)
+        break
+        case 405:
+            pm.test(`There's No Details of Booking ID- ${id}. Create First`)
+        break
+    }
+```
 #### Response Body:
 ```
 {
@@ -185,9 +285,58 @@ pm.environment.set("uextraNeeds", selected)
     "additionalneeds": "Dinner"
 }
 ```
-### 5. Read After Modify Booking
+### 5. Read After Modify A Booking
 #### URL: https://restful-booker.herokuapp.com/booking/3078
 #### METHOD: GET
+#### Pre-request Script: None
+#### Request Body: None
+#### Tests: 
+```
+// TAKE ID FROM ENVIRONMENT
+const id = pm.environment.get("bID")
+switch (pm.response.code)
+
+    {
+        case 200:
+            pm.test(`Details Modified Under ID- ${id}`)
+            // GET RESPONSES TO CROOS MATCH
+            var resData = pm.response.json()
+            // CHECK THAT THE RESPONSE DATA MATCH WITH GIVEN DATA OR NOT
+            pm.test("Checking whether first name is modified as given input or not!", function(){
+                pm.expect(pm.environment.get("ufName")).to.eql(resData.firstname)
+            })
+            pm.test("Checking whether last name is modified as given input or not!", function(){
+                pm.expect(pm.environment.get("ulName")).to.eql(resData.lastname)
+            })
+            pm.test("Checking whether total price is modified as given input or not!", function(){
+                //const intValue = parseInt(resData.totalprice)
+                // NEED TO PARSE ENVIRONMENT'S VALUE TO INTEGER FORMAT CAUSE IT PASSES STRING
+                var enValue = parseInt(pm.environment.get("utPrice"))
+                pm.expect(enValue).to.eql(resData.totalprice)
+            })
+            pm.test("Checking whether deposit paid is modified as given input or not!", function(){
+                // NEED TO PARSE ENVIRONMENT'S VALUE TO BOOLEAN FORMAT CAUSE IT PASSES STRING
+                var enValue = JSON.parse(pm.environment.get("udPaid"))
+                pm.expect(enValue).to.eql(resData.depositpaid)
+            })
+            pm.test("Checking whether checkin date is modified as given input or not!", function(){
+                pm.expect(pm.environment.get("uciDate")).to.eql(resData.bookingdates.checkin)
+            })
+            pm.test("Checking whether checkout date is modified as given input or not!", function(){
+                pm.expect(pm.environment.get("ucoDate")).to.eql(resData.bookingdates.checkout)
+            })
+            pm.test("Checking whether additional need is modified as given input or not!", function(){
+                pm.expect(pm.environment.get("uextraNeeds")).to.eql(resData.additionalneeds)
+            })
+        break
+        case 404:
+            pm.test(`☹️ Details Unavailable For ID- ${id}`)
+        break
+        default:
+            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)
+    }
+
+```
 #### Response Body:
 ```
 {
@@ -224,6 +373,22 @@ pm.environment.set("ptPrice", res3)
 
 }
 ```
+#### Tests: 
+```
+const id = pm.environment.get("bID")
+switch(pm.response.code)
+    {
+        case 200:
+            pm.test(`Successful To Modify Details of Booking ID- ${id}.`)
+        break
+        case 403:
+            pm.test(`Unsuccessful To Modify Details of Booking ID- ${id}`)
+        break
+        case 405:
+            pm.test(`There's No Details of Booking ID- ${id}. Create First`)
+        break
+    }
+```
 #### Response Body:
 ```
 {
@@ -241,6 +406,36 @@ pm.environment.set("ptPrice", res3)
 ### 7. Read After Partially Modify A Booking
 #### URL: https://restful-booker.herokuapp.com/booking/3078
 #### METHOD: GET
+#### Pre-request Script: None
+#### Request Body: None
+#### Tests:
+```
+const id = pm.environment.get("bID")
+switch(pm.response.code)
+    {
+        case 200:
+            pm.test(`Details Modified Under ID- ${id}`)
+            var res = pm.response.json()
+            pm.test("Checking whether first name is modified as given or not.", function()
+            {
+                pm.expect(pm.environment.get("pfName")).to.eql(res.firstname)
+            })
+            pm.test("Checking whether last name is modified as given or not.", function()
+            {
+                pm.expect(pm.environment.get("plName")).to.eql(res.lastname)
+            })
+            pm.test("Checking whether total price is modified as given or not.", function()
+            {
+                pm.expect(parseInt(pm.environment.get("ptPrice"))).to.eql(res.totalprice)
+            })
+        break
+        case 404:
+            pm.test(`☹️ Details Unavailable For ID- ${id}`)
+        break
+        default:
+            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)
+    }
+```
 #### Response Body:
 ```
 {
@@ -258,6 +453,29 @@ pm.environment.set("ptPrice", res3)
 ### 8. Delete A Booking
 #### URL: https://restful-booker.herokuapp.com/booking/3078
 #### METHOD: DELETE
+#### Pre-request Script: None
+#### Request Body: None
+#### Tests:
+```
+const id = pm.environment.get("bID")
+switch(pm.response.code)
+    {
+        case 200,201:
+            pm.test(`Successful To Delete Details of Booking ID- ${id}.`)
+        break
+        case 403:
+            pm.test(`Unsuccessful To Delete Details of Booking ID- ${id}`)
+        break
+        case 404:
+            pm.test(`☹️ Details Unavailable For Booking ID- ${id}`)
+        break
+        case 405:
+            pm.test(`There's No Details of ID- ${id}. Create First`)
+        break
+        default:
+            pm.test(`Unable To Delete Details of Booking ID- ${id}`)
+    }
+```
 #### Response Body:
 ```
 Created
@@ -265,6 +483,20 @@ Created
 ### 9. Read After Delete A Booking
 #### URL: https://restful-booker.herokuapp.com/booking/3078
 #### METHOD: GET
+#### Pre-request Script: None
+#### Request Body: None
+#### Tests:
+```
+const id = pm.environment.get("bID")
+switch(pm.response.code)
+    {
+        case 404:
+            pm.test(`☹️ Details Are Deleted of ID- ${id}.`)
+        break
+        default:
+            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)
+    }
+```
 #### Response Body:
 ```
 Not Found
