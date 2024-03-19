@@ -1,0 +1,613 @@
+{
+	"info": {
+		"_postman_id": "8f26fec3-d497-4ab8-8a74-e2eecab02908",
+		"name": "REST_API_Booking_SKP",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33497213"
+	},
+	"item": [
+		{
+			"name": "Positive_Scenario",
+			"item": [
+				{
+					"name": "Create_Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// CHECK STATUS CODE IF 200 DO CERTAIN TASKS\r",
+									"switch(pm.response.code)\r",
+									"    {\r",
+									"        case 200:\r",
+									"            // TAKE bookingid FROM RESPONSE THEN SET THAT IN ENVIRONMENT\r",
+									"            var resData = pm.response.json()\r",
+									"            pm.environment.set('bID', resData.bookingid)\r",
+									"            var id = pm.environment.get(\"bID\")\r",
+									"            pm.test(`😊 Booking Successful. The Booking ID-${id}.`)\r",
+									"            break\r",
+									"        default:\r",
+									"            pm.test(\"☹️ Booking Unsuccessful !\")\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"//Generate Random First Name and Set That in Environment\r",
+									"//var firstName = pm.variables.replaceIn(\"{{$randomNamePrefix}} {{$randomFirstName}}\")\r",
+									"pm.environment.set(\"fName\", pm.variables.replaceIn(\"{{$randomNamePrefix}} {{$randomFirstName}}\"))\r",
+									"//console.log(firstName)\r",
+									"//Generate Random Last Name and Set That in Environment\r",
+									"//var lastName = pm.variables.replaceIn(\"{{$randomLastName}}\")\r",
+									"pm.environment.set(\"lName\", pm.variables.replaceIn(\"{{$randomLastName}}\"))\r",
+									"pm.environment.set(\"tPrice\", pm.variables.replaceIn(\"{{$randomInt}}\"))\r",
+									"pm.environment.set(\"dPaid\", pm.variables.replaceIn(\"{{$randomBoolean}}\"))\r",
+									"//pm.environment.set(\"ciDate\", pm.variables.replaceIn(\"{{$randomDateFuture}}\"))\r",
+									"\r",
+									"// GET THE CURRENT DATE\r",
+									"const date = require('moment')\r",
+									"\r",
+									"// FORMAT AS YYYY-MM-DD THEN SET THAT TO ENVIRONMENT\r",
+									"const today = date().format('YYYY-MM-DD')\r",
+									"pm.environment.set(\"ciDate\", today)\r",
+									"\r",
+									"// 2 DAYS FORWARD FROM CURRENT THEN SET THAT TO ENVIRONMENT\r",
+									"const future = date().add(2, 'days').format('YYYY-MM-DD')\r",
+									"pm.environment.set(\"coDate\", future)\r",
+									"\r",
+									"// RANDOMLY SELECT MEAL THEN SET IT TO ENVIRONMENT\r",
+									"const meals = [\"Breakfast\", \"Lunch\", \"Brunch\", \"Dinner\"]\r",
+									"const selected = meals[Math.floor(Math.random() * meals.length)]\r",
+									"pm.environment.set(\"extraNeeds\", selected)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"firstname\" : \"{{fName}}\",\r\n\"lastname\" : \"{{lName}}\",\r\n\"totalprice\" : {{tPrice}},\r\n\"depositpaid\" : {{dPaid}},\r\n\"bookingdates\" : {\r\n\"checkin\" : \"{{ciDate}}\",\r\n\"checkout\" : \"{{coDate}}\"\r\n},\r\n\"additionalneeds\" : \"{{extraNeeds}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/booking/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read_After_Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// TAKE ID FROM ENVIRONMENT\r",
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch (pm.response.code)\r",
+									"\r",
+									"    {\r",
+									"        case 200:\r",
+									"            pm.test(`Details Belong From ID- ${id}`)\r",
+									"            // STORE THE RESPONSE INTO A VARIABLE\r",
+									"            var resData = pm.response.json()\r",
+									"            // CHECK THAT THE RESPONSE DATA MATCH WITH GIVEN DATA OR NOT\r",
+									"            pm.test(\"Checking whether first name is inserted as given input or not.\", function(){\r",
+									"                pm.expect(pm.environment.get(\"fName\")).to.eql(resData.firstname)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether last name is inserted as given input or not.\", function(){\r",
+									"                pm.expect(pm.environment.get(\"lName\")).to.eql(resData.lastname)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether total price is inserted as given input or not.\", function(){\r",
+									"                //const intValue = parseInt(resData.totalprice)\r",
+									"                // NEED TO PARSE ENVIRONMENT'S VALUE TO INTEGER FORMAT CAUSE IT PASSES STRING\r",
+									"                //var enValue = parseInt(pm.environment.get(\"tPrice\"))\r",
+									"                pm.expect(parseInt(pm.environment.get(\"tPrice\"))).to.eql(resData.totalprice)\r",
+									"            })\r",
+									"            pm.test(\"Total Price is cross: 500\", function(){\r",
+									"                //const intValue = parseInt(resData.totalprice)\r",
+									"                // NEED TO PARSE ENVIRONMENT'S VALUE TO INTEGER FORMAT CAUSE IT PASSES STRING\r",
+									"                //var enValue = parseInt(pm.environment.get(\"tPrice\"))\r",
+									"                pm.expect(parseInt(pm.environment.get(\"tPrice\"))).to.be.above(500)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether deposit price is inserted as given input or not.\", function(){\r",
+									"                // NEED TO PARSE ENVIRONMENT'S VALUE TO BOOLEAN FORMAT CAUSE IT PASSES STRING\r",
+									"                var enValue = JSON.parse(pm.environment.get(\"dPaid\"))\r",
+									"                pm.expect(enValue).to.eql(resData.depositpaid)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether checkin date is inserted as given input or not.\", function(){\r",
+									"                pm.expect(pm.environment.get(\"ciDate\")).to.eql(resData.bookingdates.checkin)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether checkout date is inserted as given input or not.\", function(){\r",
+									"                pm.expect(pm.environment.get(\"coDate\")).to.eql(resData.bookingdates.checkout)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether additional need is inserted as given input or not.\", function(){\r",
+									"                pm.expect(pm.environment.get(\"extraNeeds\")).to.eql(resData.additionalneeds)\r",
+									"            })\r",
+									"        break\r",
+									"        case 404:\r",
+									"            pm.test(`☹️ Details Unavailable For ID- ${id}`)\r",
+									"        break\r",
+									"        default:\r",
+									"            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)\r",
+									"    }\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"switch (pm.response.code)\r",
+									"    {\r",
+									"        case 200:\r",
+									"                pm.environment.set(\"AuthToken\", pm.response.json().token)\r",
+									"                pm.test(\"Now, You Are Allowed To Update/Delete Bookings.\")\r",
+									"        break\r",
+									"        default:\r",
+									"            pm.test(\"☹️ Not Allowed To Update/Delete Bookings.\")\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"username\": \"admin\",\r\n\"password\": \"password123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://restful-booker.herokuapp.com/auth",
+							"protocol": "https",
+							"host": [
+								"restful-booker",
+								"herokuapp",
+								"com"
+							],
+							"path": [
+								"auth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modify_Booking",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"//Generate Random First Name and Set That in Environment\r",
+									"//var firstName = pm.variables.replaceIn(\"{{$randomNamePrefix}} {{$randomFirstName}}\")\r",
+									"pm.environment.set(\"ufName\", pm.variables.replaceIn(\"{{$randomNamePrefix}} {{$randomFirstName}}\"))\r",
+									"//console.log(firstName)\r",
+									"//Generate Random Last Name and Set That in Environment\r",
+									"//var lastName = pm.variables.replaceIn(\"{{$randomLastName}}\")\r",
+									"pm.environment.set(\"ulName\", pm.variables.replaceIn(\"{{$randomLastName}}\"))\r",
+									"pm.environment.set(\"utPrice\", pm.variables.replaceIn(\"{{$randomInt}}\"))\r",
+									"pm.environment.set(\"udPaid\", pm.variables.replaceIn(\"{{$randomBoolean}}\"))\r",
+									"//pm.environment.set(\"ciDate\", pm.variables.replaceIn(\"{{$randomDateFuture}}\"))\r",
+									"\r",
+									"// GET THE CURRENT DATE\r",
+									"const date = require('moment')\r",
+									"\r",
+									"// FORMAT AS YYYY-MM-DD THEN SET THAT TO ENVIRONMENT\r",
+									"const today = date().add(1, 'd').format('YYYY-MM-DD')\r",
+									"pm.environment.set(\"uciDate\", today)\r",
+									"\r",
+									"// 2 DAYS FORWARD FROM CURRENT THEN SET THAT TO ENVIRONMENT\r",
+									"const future = date().add(3, 'd').format('YYYY-MM-DD')\r",
+									"pm.environment.set(\"ucoDate\", future)\r",
+									"\r",
+									"// RANDOMLY SELECT MEAL THEN SET IT TO ENVIRONMENT\r",
+									"const meals = [\"Breakfast\", \"Lunch\", \"Brunch\", \"Dinner\"]\r",
+									"const selected = meals[Math.floor(Math.random() * meals.length)]\r",
+									"pm.environment.set(\"uextraNeeds\", selected)\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch(pm.response.code)\r",
+									"    {\r",
+									"        case 200:\r",
+									"            pm.test(`Successful To Modify Details of Booking ID- ${id}.`)\r",
+									"        break\r",
+									"        case 403:\r",
+									"            pm.test(`Unsuccessful To Modify Details of Booking ID- ${id}`)\r",
+									"        break\r",
+									"        case 405:\r",
+									"            pm.test(`There's No Details of Booking ID- ${id}. Create First`)\r",
+									"        break\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "token={{AuthToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstname\": \"{{ufName}}\",\r\n    \"lastname\": \"{{ulName}}\",\r\n    \"totalprice\": {{utPrice}},\r\n    \"depositpaid\": {{udPaid}},\r\n    \"bookingdates\": {\r\n        \"checkin\": \"{{uciDate}}\",\r\n        \"checkout\": \"{{ucoDate}}\"\r\n    },\r\n    \"additionalneeds\": \"{{uextraNeeds}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read_After_Modify",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// TAKE ID FROM ENVIRONMENT\r",
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch (pm.response.code)\r",
+									"\r",
+									"    {\r",
+									"        case 200:\r",
+									"            pm.test(`Details Modified Under ID- ${id}`)\r",
+									"            // GET RESPONSES TO CROOS MATCH\r",
+									"            var resData = pm.response.json()\r",
+									"            // CHECK THAT THE RESPONSE DATA MATCH WITH GIVEN DATA OR NOT\r",
+									"            pm.test(\"Checking whether first name is modified as given input or not!\", function(){\r",
+									"                pm.expect(pm.environment.get(\"ufName\")).to.eql(resData.firstname)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether last name is modified as given input or not!\", function(){\r",
+									"                pm.expect(pm.environment.get(\"ulName\")).to.eql(resData.lastname)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether total price is modified as given input or not!\", function(){\r",
+									"                //const intValue = parseInt(resData.totalprice)\r",
+									"                // NEED TO PARSE ENVIRONMENT'S VALUE TO INTEGER FORMAT CAUSE IT PASSES STRING\r",
+									"                var enValue = parseInt(pm.environment.get(\"utPrice\"))\r",
+									"                pm.expect(enValue).to.eql(resData.totalprice)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether deposit paid is modified as given input or not!\", function(){\r",
+									"                // NEED TO PARSE ENVIRONMENT'S VALUE TO BOOLEAN FORMAT CAUSE IT PASSES STRING\r",
+									"                var enValue = JSON.parse(pm.environment.get(\"udPaid\"))\r",
+									"                pm.expect(enValue).to.eql(resData.depositpaid)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether checkin date is modified as given input or not!\", function(){\r",
+									"                pm.expect(pm.environment.get(\"uciDate\")).to.eql(resData.bookingdates.checkin)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether checkout date is modified as given input or not!\", function(){\r",
+									"                pm.expect(pm.environment.get(\"ucoDate\")).to.eql(resData.bookingdates.checkout)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether additional need is modified as given input or not!\", function(){\r",
+									"                pm.expect(pm.environment.get(\"uextraNeeds\")).to.eql(resData.additionalneeds)\r",
+									"            })\r",
+									"        break\r",
+									"        case 404:\r",
+									"            pm.test(`☹️ Details Unavailable For ID- ${id}`)\r",
+									"        break\r",
+									"        default:\r",
+									"            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)\r",
+									"    }\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modify_Partial_Booking",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									"var res = pm.variables.replaceIn(\"{{$randomNamePrefix}} {{$randomFirstName}}\")\r",
+									"pm.environment.set(\"pfName\", res)\r",
+									"var res2 = pm.variables.replaceIn(\"{{$randomLastName}}\")\r",
+									"pm.environment.set(\"plName\", res2)\r",
+									"var res3 = pm.variables.replaceIn(\"{{$randomInt}}\")\r",
+									"pm.environment.set(\"ptPrice\", res3)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch(pm.response.code)\r",
+									"    {\r",
+									"        case 200:\r",
+									"            pm.test(`Successful To Modify Details of Booking ID- ${id}.`)\r",
+									"        break\r",
+									"        case 403:\r",
+									"            pm.test(`Unsuccessful To Modify Details of Booking ID- ${id}`)\r",
+									"        break\r",
+									"        case 405:\r",
+									"            pm.test(`There's No Details of Booking ID- ${id}. Create First`)\r",
+									"        break\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "token={{AuthToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstname\" : \"{{pfName}}\",\r\n    \"lastname\" : \"{{plName}}\",\r\n    \"totalprice\" : {{ptPrice}}\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read_After_Partial_Modify",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch(pm.response.code)\r",
+									"    {\r",
+									"        case 200:\r",
+									"            pm.test(`Details Modified Under ID- ${id}`)\r",
+									"            var res = pm.response.json()\r",
+									"            pm.test(\"Checking whether first name is modified as given or not.\", function()\r",
+									"            {\r",
+									"                pm.expect(pm.environment.get(\"pfName\")).to.eql(res.firstname)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether last name is modified as given or not.\", function()\r",
+									"            {\r",
+									"                pm.expect(pm.environment.get(\"plName\")).to.eql(res.lastname)\r",
+									"            })\r",
+									"            pm.test(\"Checking whether total price is modified as given or not.\", function()\r",
+									"            {\r",
+									"                pm.expect(parseInt(pm.environment.get(\"ptPrice\"))).to.eql(res.totalprice)\r",
+									"            })\r",
+									"        break\r",
+									"        case 404:\r",
+									"            pm.test(`☹️ Details Unavailable For ID- ${id}`)\r",
+									"        break\r",
+									"        default:\r",
+									"            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete_Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch(pm.response.code)\r",
+									"    {\r",
+									"        case 200,201:\r",
+									"            pm.test(`Successful To Delete Details of Booking ID- ${id}.`)\r",
+									"        break\r",
+									"        case 403:\r",
+									"            pm.test(`Unsuccessful To Delete Details of Booking ID- ${id}`)\r",
+									"        break\r",
+									"        case 404:\r",
+									"            pm.test(`☹️ Details Unavailable For Booking ID- ${id}`)\r",
+									"        break\r",
+									"        case 405:\r",
+									"            pm.test(`There's No Details of ID- ${id}. Create First`)\r",
+									"        break\r",
+									"        default:\r",
+									"            pm.test(`Unable To Delete Details of Booking ID- ${id}`)\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "token={{AuthToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read_After_Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const id = pm.environment.get(\"bID\")\r",
+									"switch(pm.response.code)\r",
+									"    {\r",
+									"        case 404:\r",
+									"            pm.test(`☹️ Details Are Deleted of ID- ${id}.`)\r",
+									"        break\r",
+									"        default:\r",
+									"            pm.test(`☹️ Trouble For Fetching Booking Details of ID- ${id}`)\r",
+									"    }"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/booking/{{bID}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"booking",
+								"{{bID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
