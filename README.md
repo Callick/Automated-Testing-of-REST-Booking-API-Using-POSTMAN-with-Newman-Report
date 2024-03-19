@@ -278,3 +278,11 @@ Not Found
   ```
     newman run REST_API_Booking.postman_collection.json -e Env_REST_API_Booking.postman_environment.json -r cli,htmlextra
   ```
+# Newman Report Summary:
+![image](https://github.com/Callick/Automated-Testing-of-REST-Booking-API-Using-POSTMAN-with-Newman-Report/assets/32848605/595ebf0f-9997-42c2-8708-0d2d52f0b131)
+![image](https://github.com/Callick/Automated-Testing-of-REST-Booking-API-Using-POSTMAN-with-Newman-Report/assets/32848605/9ed54e78-25ae-48fe-a0a0-62b8cb133035)
+![image](https://github.com/Callick/Automated-Testing-of-REST-Booking-API-Using-POSTMAN-with-Newman-Report/assets/32848605/5e4a100d-4b34-4163-aea0-bb44d8799928)
+![image](https://github.com/Callick/Automated-Testing-of-REST-Booking-API-Using-POSTMAN-with-Newman-Report/assets/32848605/a507b176-540f-4fdb-a8da-9f71c8b9e6e3)
+
+
+
